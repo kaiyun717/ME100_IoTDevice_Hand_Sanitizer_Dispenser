@@ -19,7 +19,7 @@ class Connection:
         # MQTT connection information
         self.adafruit_io_url = 'io.adafruit.com'
         self.adafruit_username = 'kaileo'
-        self.adafruit_aio_key = 'aio_hvPZ54ymjPSN7wuWjudLRbwCL4AD'
+        self.adafruit_aio_key = 'aio_MYlm24mDgupeUFETg8t3TbvLNyNe'
 
         # Adafruit feed
         self.feed_name = 'kaileo/feeds/pckt-refill'
@@ -48,40 +48,6 @@ class Connection:
         time.sleep(0.5)
         print("AdaFruit connection made at:", self.adafruit_username)
 
-    def initial_amount_callback(self, topic, amount):
-        """
-        Sets initial amount for the dispenser from AdaFruit dashboard.
-        :param topic: name of the topic
-        :param amount: initial amount set with the toggle block
-        :return: initial amount set by the user
-        """
-
-        # print("%4.3f"%(amount))
-        print("Print statement from callback function:", amount, "oz")
-        print(type(amount))
-
-        # if amount is None:
-        #     print("No integer from AdaFruit yet: ", amount)
-        # else:
-        #     print("Integer from AdaFruit:", amount)
-
-        return amount
-
-    def on_off_callback(self, topic, msg):
-        """
-        ### NOT sure whether to use this ###
-        Whether to turn the device on or off.
-        :param topic: name of the topic
-        :param msg: On or Off from AdaFruit
-        :return: True or False
-        """
-        if msg == b"ON":
-            print(msg)
-            return True
-        else:
-            print("OFF")
-            return False
-
     def return_ip(self):
         return self.ip
 
@@ -97,9 +63,11 @@ class Dispenser:
         :param initial_amount: initial amount of filled hand sanitizer. (ounces)
         :param refill_standard: refill standard chosen by the user. (ounces)
         """
+
         self.initial_amount = initial_amount    # ounces
         self.refill_standard = refill_standard  # ounces
         self.amount_left = initial_amount        # ounces
+        self.initial_amount_not_set = True         # Checks whether initial_amount has been set by user.
 
         # Number of usages so far.
         self.number_used = 0        # count
@@ -107,6 +75,21 @@ class Dispenser:
         self.per_usage = 10         # ounces
         # Distance standard for counting a usage.
         self.usage_standard = 10     # cm
+
+    def initial_amount_callback(self, topic, feed):
+        """
+        Sets initial amount for the dispenser from AdaFruit dashboard.
+        :param topic: name of the topic
+        :param feed: feed input from AdaFruit feed
+        :return: N/A
+        """
+        feed_str = feed.decode()
+
+        if feed_str.isdigit() and self.initial_amount_not_set:
+            self.initial_amount = int(feed_str)
+            self.amount_left = self.initial_amount
+            self.initial_amount_not_set = False
+            print("Initial Amount:", self.initial_amount, "oz")
 
     def used(self):
         """
@@ -144,6 +127,13 @@ class Dispenser:
         """
         return self.usage_standard
 
+    def return_initial_amount_not_set(self):
+        """
+        Return the boolean `initial_amount_not_set`.
+        :return: initial_amount_not_set
+        """
+        return self.initial_amount_not_set
+
 
 class SonarSensor:
 
@@ -169,46 +159,38 @@ if __name__ == "__main__":
     connection.wifi_connection()
     connection.adafruit_connection()
 
+    # Initialize the Dispenser class.
+    dispenser = Dispenser()
+
     mqtt = connection.return_mqtt()
-    mqtt.set_callback(connection.initial_amount_callback)
+    mqtt.set_callback(dispenser.initial_amount_callback)
     mqtt.publish(connection.feed_name, "Pckt Refill connection made!")
     print("Connection made with Pckt-Refill interface.\n")
     mqtt.subscribe(connection.feed_name)
 
-    ada_initial_amount = 100
-
-    while True:
-        ada_initial_amount = mqtt.check_msg()
-        print("Print message from while loop:", ada_initial_amount, "oz")
+    while dispenser.return_initial_amount_not_set():
+        mqtt.check_msg()
+        print("Waiting for the user to set initial amount...")
         time.sleep(2)
+        continue
 
-    # #     # if isinstance(msg, int):
-    # #     #     ada_initial_amount = int(msg)
-    # #     #     print("Initial Amount: ", ada_initial_amount, "Oz")
-    # #     #     break
-    # #     # else:
-    # #     #     print("No integer from AdaFruit yet... \nWe got:", msg)
-    # #     #     time.sleep(2)
-    # #     #     continue
+    initial_amount = dispenser.return_initial_amount()
+    refill_standard = dispenser.return_refill_standard()
+    usage_standard = dispenser.return_usage_standard()
+
+    # Print all the initial values for the Dispenser.
+    print("Setting finished...")
+    print("Initial Amount: ", initial_amount, "Oz")
+    print("Refill Standard: ", refill_standard, "Oz")
+    print("Usage Standard: ", usage_standard, "cm")
 
     # Initialize all the LED lights.
     led_yellow = Pin(4, mode=Pin.OUT)
     led_green = Pin(27, mode=Pin.OUT)
     led_red = Pin(21, mode=Pin.OUT)
 
-    # Initialize the Dispenser class.
-    dispenser = Dispenser(initial_amount=ada_initial_amount)
-    initial_amount = dispenser.return_initial_amount()
-    refill_standard = dispenser.return_refill_standard()
-    usage_standard = dispenser.return_usage_standard()
-
     # Turn the green LED on to signal that the dispenser is full.
     led_green(1)
-
-    # Print all the initial values for the Dispenser.
-    print("Initial Amount: ", initial_amount, "Oz")
-    print("Refill Standard: ", refill_standard, "Oz")
-    print("Usage Standard: ", usage_standard, "cm")
 
     time.sleep(5)
 
