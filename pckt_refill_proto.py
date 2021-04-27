@@ -19,7 +19,7 @@ class Connection:
         # MQTT connection information
         self.adafruit_io_url = 'io.adafruit.com'
         self.adafruit_username = 'kaileo'
-        self.adafruit_aio_key = 'aio_CHOe50GxVH1hRAGMCF4XbXjHK6KE'
+        self.adafruit_aio_key = 'aio_hvPZ54ymjPSN7wuWjudLRbwCL4AD'
 
         # Adafruit feed
         self.feed_name = 'kaileo/feeds/pckt-refill'
@@ -55,6 +55,16 @@ class Connection:
         :param amount: initial amount set with the toggle block
         :return: initial amount set by the user
         """
+
+        # print("%4.3f"%(amount))
+        print("Print statement from callback function:", amount, "oz")
+        print(type(amount))
+
+        # if amount is None:
+        #     print("No integer from AdaFruit yet: ", amount)
+        # else:
+        #     print("Integer from AdaFruit:", amount)
+
         return amount
 
     def on_off_callback(self, topic, msg):
@@ -162,23 +172,24 @@ if __name__ == "__main__":
     mqtt = connection.return_mqtt()
     mqtt.set_callback(connection.initial_amount_callback)
     mqtt.publish(connection.feed_name, "Pckt Refill connection made!")
-    print("Connection made with Pckt-Refill interface.")
+    print("Connection made with Pckt-Refill interface.\n")
     mqtt.subscribe(connection.feed_name)
 
-    # while True:
-    #     # msg = mqtt.check_msg()
-    #     # if msg is None:
-    #     #     continue
-    #     # else:
-    #     #     ada_initial_amount = int(msg)
-    #
-    #     # try:
-    #     #     ada_initial_amount = int(mqtt.check_msg())
-    #     # except TypeError:
-    #     #     continue
-    #
-    #     print("Initial amount set from adafruit:", mqtt.check_msg())
-    #     break
+    ada_initial_amount = 100
+
+    while True:
+        ada_initial_amount = mqtt.check_msg()
+        print("Print message from while loop:", ada_initial_amount, "oz")
+        time.sleep(2)
+
+    # #     # if isinstance(msg, int):
+    # #     #     ada_initial_amount = int(msg)
+    # #     #     print("Initial Amount: ", ada_initial_amount, "Oz")
+    # #     #     break
+    # #     # else:
+    # #     #     print("No integer from AdaFruit yet... \nWe got:", msg)
+    # #     #     time.sleep(2)
+    # #     #     continue
 
     # Initialize all the LED lights.
     led_yellow = Pin(4, mode=Pin.OUT)
@@ -186,7 +197,7 @@ if __name__ == "__main__":
     led_red = Pin(21, mode=Pin.OUT)
 
     # Initialize the Dispenser class.
-    dispenser = Dispenser(initial_amount=100)
+    dispenser = Dispenser(initial_amount=ada_initial_amount)
     initial_amount = dispenser.return_initial_amount()
     refill_standard = dispenser.return_refill_standard()
     usage_standard = dispenser.return_usage_standard()
