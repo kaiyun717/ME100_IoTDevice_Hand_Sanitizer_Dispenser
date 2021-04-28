@@ -8,10 +8,3 @@ This is the code for an add-on IoT Device that measures the amount of hand sanit
 
 <img src="https://user-images.githubusercontent.com/70457814/112840763-b04c6900-90da-11eb-9ea5-3ade7bda4b37.png" width=800x>
 
-## Ultrasonic Sonar Distance Sensor
-
-## IFTTT Connection API
-
-## MQTT
-
-## Adafruit IO

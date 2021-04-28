@@ -1,6 +1,13 @@
 """
-Pckt Refill (Pocket Refill)
-(ME 100 - Spring 2021 :: Final Project)
+╔====================================================╗
+║ Pckt Refill (Pocket Refill)                        ║
+║ Author: Kai Yun                                    ║
+║                                                    ║
+║ University of California, Berkeley                 ║
+║ Mechanical Engineering 100 :: Internet of Things   ║
+║ Spring 2021 Final Project                          ║
+╚====================================================╝
+(The project was done with Aaron Wagner.)
 """
 
 from mqttclient import MQTTClient
