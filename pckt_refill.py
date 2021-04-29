@@ -26,7 +26,7 @@ class Connection:
         # MQTT connection information
         self.adafruit_io_url = 'io.adafruit.com'
         self.adafruit_username = 'kaileo'
-        self.adafruit_aio_key = 'aio_MYlm24mDgupeUFETg8t3TbvLNyNe'
+        self.adafruit_aio_key = 'aio_pYud03dLxvXpoTuxROvZX9qSMYuY'
 
         # Adafruit feed
         self.feed_name = 'kaileo/feeds/pckt-refill'
@@ -68,13 +68,14 @@ class Dispenser:
         """
         Keeps track of how much hand sanitizer is left and related calculations.
         :param initial_amount: initial amount of filled hand sanitizer. (ounces)
-        :param refill_standard: refill standard chosen by the user. (ounces)
+        :param refill_standard: refill standard chosen by the user. (percentile)
         """
 
         self.initial_amount = initial_amount    # ounces
-        self.refill_standard = refill_standard  # ounces
+        self.refill_standard_percentile = refill_standard   # percentile
+        self.refill_standard = initial_amount * self.refill_standard_percentile / 100  # ounces
         self.amount_left = initial_amount        # ounces
-        self.initial_amount_not_set = True         # Checks whether initial_amount has been set by user.
+        self.initial_amount_not_set = True       # Checks whether initial_amount has been set by user.
 
         # Number of usages so far.
         self.number_used = 0        # count
@@ -95,6 +96,7 @@ class Dispenser:
         if feed_str.isdigit() and self.initial_amount_not_set:
             self.initial_amount = int(feed_str)
             self.amount_left = self.initial_amount
+            self.refill_standard = self.initial_amount * self.refill_standard / 100
             self.initial_amount_not_set = False
             print("Initial Amount:", self.initial_amount, "oz")
 
@@ -120,12 +122,12 @@ class Dispenser:
         """
         return self.initial_amount
 
-    def return_refill_standard(self):
+    def return_refill_standard_percentile(self):
         """
         Make a way for the user to set the refill_standard and return the value.
         :return: refill_standard
         """
-        return self.refill_standard
+        return self.refill_standard_percentile
 
     def return_usage_standard(self):
         """
@@ -155,7 +157,6 @@ class SonarSensor:
         This returns True when the sensor senses a usage.
         :return: distance
         """
-
         return self.sensor.distance_cm()
 
 
@@ -175,20 +176,20 @@ if __name__ == "__main__":
     print("Connection made with Pckt-Refill interface.\n")
     mqtt.subscribe(connection.feed_name)
 
+    print("Waiting for the user to set initial amount...")
     while dispenser.return_initial_amount_not_set():
         mqtt.check_msg()
-        print("Waiting for the user to set initial amount...")
         time.sleep(2)
         continue
 
     initial_amount = dispenser.return_initial_amount()
-    refill_standard = dispenser.return_refill_standard()
+    refill_standard = dispenser.return_refill_standard_percentile()
     usage_standard = dispenser.return_usage_standard()
 
     # Print all the initial values for the Dispenser.
     print("Setting finished...")
     print("Initial Amount: ", initial_amount, "Oz")
-    print("Refill Standard: ", refill_standard, "Oz")
+    print("Refill Standard: ", refill_standard, "%")
     print("Usage Standard: ", usage_standard, "cm")
 
     # Initialize all the LED lights.
@@ -226,7 +227,7 @@ if __name__ == "__main__":
 
             # No need to turn it off in real usage.
             # Turn off when it's refilled.
-            led_red(0)
+
             mqtt.publish(connection.feed_name, "Dispenser empty. Need REFILL!")
             break
 
