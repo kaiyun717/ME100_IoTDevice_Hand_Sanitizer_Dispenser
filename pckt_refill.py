@@ -26,7 +26,7 @@ class Connection:
         # MQTT connection information
         self.adafruit_io_url = 'io.adafruit.com'
         self.adafruit_username = 'kaileo'
-        self.adafruit_aio_key = 'aio_pYud03dLxvXpoTuxROvZX9qSMYuY'
+        self.adafruit_aio_key = 'aio_IaeO99tMXIhxNaMVg6jMXm48tSOr'
 
         # Adafruit feed
         self.feed_name = 'kaileo/feeds/pckt-refill'
@@ -67,20 +67,20 @@ class Dispenser:
     def __init__(self, initial_amount=1000, refill_standard=10):
         """
         Keeps track of how much hand sanitizer is left and related calculations.
-        :param initial_amount: initial amount of filled hand sanitizer. (ounces)
+        :param initial_amount: initial amount of filled hand sanitizer. (milliliter)
         :param refill_standard: refill standard chosen by the user. (percentile)
         """
 
-        self.initial_amount = initial_amount    # ounces
+        self.initial_amount = initial_amount    # milliliter
         self.refill_standard_percentile = refill_standard   # percentile
         self.refill_standard = initial_amount * self.refill_standard_percentile / 100  # ounces
-        self.amount_left = initial_amount        # ounces
+        self.amount_left = initial_amount        # milliliter
         self.initial_amount_not_set = True       # Checks whether initial_amount has been set by user.
 
         # Number of usages so far.
         self.number_used = 0        # count
         # Amount used per usage.
-        self.per_usage = 10         # ounces
+        self.per_usage = 2         # milliliter
         # Distance standard for counting a usage.
         self.usage_standard = 10     # cm
 
@@ -98,7 +98,7 @@ class Dispenser:
             self.amount_left = self.initial_amount
             self.refill_standard = self.initial_amount * self.refill_standard / 100
             self.initial_amount_not_set = False
-            print("Initial Amount:", self.initial_amount, "oz")
+            print("Initial Amount:", self.initial_amount, "milliliter.")
 
     def used(self):
         """
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 
     # Print all the initial values for the Dispenser.
     print("Setting finished...")
-    print("Initial Amount: ", initial_amount, "Oz")
+    print("Initial Amount: ", initial_amount, "milliliter")
     print("Refill Standard: ", refill_standard, "%")
     print("Usage Standard: ", usage_standard, "cm")
 
@@ -231,5 +231,5 @@ if __name__ == "__main__":
             mqtt.publish(connection.feed_name, "Dispenser empty. Need REFILL!")
             break
 
-        print("Amount Left:", amount_left)
+        print("Amount Left:", amount_left, "milliliter")
         time.sleep(0.5)
