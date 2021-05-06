@@ -26,7 +26,7 @@ class Connection:
         # MQTT connection information
         self.adafruit_io_url = 'io.adafruit.com'
         self.adafruit_username = 'kaileo'
-        self.adafruit_aio_key = 'aio_IaeO99tMXIhxNaMVg6jMXm48tSOr'
+        self.adafruit_aio_key = 'aio_IeMg46Z660mqJACCDCBu7Y7BjGFI'
 
         # Adafruit feed
         self.feed_name = 'kaileo/feeds/pckt-refill'
@@ -96,7 +96,7 @@ class Dispenser:
         if feed_str.isdigit() and self.initial_amount_not_set:
             self.initial_amount = int(feed_str)
             self.amount_left = self.initial_amount
-            self.refill_standard = self.initial_amount * self.refill_standard / 100
+            self.refill_standard = self.initial_amount * self.refill_standard_percentile / 100
             self.initial_amount_not_set = False
             print("Initial Amount:", self.initial_amount, "milliliter.")
 
@@ -122,10 +122,17 @@ class Dispenser:
         """
         return self.initial_amount
 
+    def return_refill_standard(self):
+        """
+        Return the refill_standard.
+        :return: refill_standard
+        """
+        return self.refill_standard
+
     def return_refill_standard_percentile(self):
         """
-        Make a way for the user to set the refill_standard and return the value.
-        :return: refill_standard
+        Return the refill_standard_percentile.
+        :return: refill_standard_percentile
         """
         return self.refill_standard_percentile
 
@@ -183,13 +190,15 @@ if __name__ == "__main__":
         continue
 
     initial_amount = dispenser.return_initial_amount()
-    refill_standard = dispenser.return_refill_standard_percentile()
+    refill_standard_percentile = dispenser.return_refill_standard_percentile()
     usage_standard = dispenser.return_usage_standard()
+    refill_standard = dispenser.return_refill_standard()
 
     # Print all the initial values for the Dispenser.
     print("Setting finished...")
     print("Initial Amount: ", initial_amount, "milliliter")
-    print("Refill Standard: ", refill_standard, "%")
+    print("Refill Standard: ", refill_standard_percentile, "%")
+    print("Refill Standard: ", refill_standard, "milliliter")
     print("Usage Standard: ", usage_standard, "cm")
 
     # Initialize all the LED lights.
@@ -207,6 +216,8 @@ if __name__ == "__main__":
 
     while True:
         distance = sonar_sensor.measure_distance()
+
+        print("Distance:", distance)
 
         if distance < usage_standard:
             led_green(0)
