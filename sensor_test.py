@@ -1,7 +1,8 @@
 import time
 
-from sensors.hcsr04 import HCSR04
-from machine import Pin
+from hcsr04 import HCSR04
+from machine import Pin, I2C
+
 
 sensor = HCSR04(trigger_pin=22, echo_pin=23, echo_timeout_us=1000000)
 led_green = Pin(27, mode=Pin.OUT)
